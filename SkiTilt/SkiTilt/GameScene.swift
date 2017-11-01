@@ -10,7 +10,7 @@ import SpriteKit
 import CoreMotion
 
 class GameScene: SKScene {
-    
+    //hello kollin
     let player = SKSpriteNode(imageNamed: "player")
     var lastUpdateTime: TimeInterval = 0
     var dt: TimeInterval = 0
