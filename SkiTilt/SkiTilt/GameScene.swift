@@ -26,6 +26,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var playerMovePointsPerSec: CGFloat = -150.0 // move -150pt / sec downward
     var velocity = CGPoint.zero
     let cameraNode = SKCameraNode()
+    var gameOverNode: SKSpriteNode = SKSpriteNode(imageNamed: "game_over.png")
+    var distanceLabel: SKLabelNode = SKLabelNode(text: "Distance: 0")
     
     
     var spawnTime = 0.5
@@ -60,14 +62,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     
         Timer.scheduledTimer(withTimeInterval: spawnTime, repeats: true, block: {(timer: Timer) -> Void in
-            
-            self.generateObstacles()
-          
+            if(self.canMove) {
+                self.generateObstacles()
+            }
         })
         
         addChild(cameraNode)
         camera = cameraNode
+        distanceLabel.text = "Distance: 0"
+        distanceLabel.position = CGPoint(x: size.width/2, y: size.height/2)
+        distanceLabel.fontSize = 20
+        distanceLabel.zPosition = 100
+        gameOverNode.position = cameraNode.position
+        gameOverNode.isHidden = true
         cameraNode.position = CGPoint(x: size.width/2, y: size.height/2)
+        cameraNode.addChild(gameOverNode)
+        
+        addChild(distanceLabel)
         
     }
     
@@ -132,7 +143,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             life.zPosition = 9999
             i = i+1
             
+
         }
+        
+        distanceLabel.position.y = (cameraNode.position.y + 350)
+        distanceLabel.position.x = (cameraNode.position.x - 200)
        
         
         
@@ -175,24 +190,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         lives = lives - 1
         
         if(lives > 0) {
+            
             print(lives)
             hearts[lives].texture = SKTexture(imageNamed: "heartGrey")
             
-        } else {
-            //GAME OVER
-            print("game over");
-        }
-        
-        Timer.scheduledTimer(withTimeInterval: 0.08, repeats: false, block: {(timer: Timer) -> Void in
-            
-            self.canMove = false
-            
-            Timer.scheduledTimer(withTimeInterval: 2, repeats: false, block: {(timer: Timer) -> Void in
+            Timer.scheduledTimer(withTimeInterval: 0.08, repeats: false, block: {(timer: Timer) -> Void in
                 
-                self.canMove = true
+                self.canMove = false
                 
+                Timer.scheduledTimer(withTimeInterval: 2, repeats: false, block: {(timer: Timer) -> Void in
+                    self.canMove = true
+                })
             })
-        })
+            
+        } else {
+            hearts[0].texture = SKTexture(imageNamed: "heartGrey")
+            self.canMove = false
+            gameOverNode.zPosition = 1000
+            gameOverNode.isHidden = false
+        }
     }
     
     func createLives (lives:Int) {
