@@ -23,15 +23,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var hearts:[SKSpriteNode] = []
     var lastUpdateTime: TimeInterval = 0
     var dt: TimeInterval = 0
-    var playerMovePointsPerSec: CGFloat = -150.0 // move -150pt / sec downward
+    var playerMovePointsPerSec: CGFloat = -150.0
     var velocity = CGPoint.zero
     let cameraNode = SKCameraNode()
     var gameOverNode: SKSpriteNode = SKSpriteNode(imageNamed: "game_over.png")
-    var distanceLabel: SKLabelNode = SKLabelNode(text: "Distance: 0")
+    var distanceLabel: UILabel = UILabel()
     
     
     var spawnTime = 0.5
-    //let obstacles = SKTileMapNode()
  
     //tilt
     let manager = CMMotionManager()
@@ -40,6 +39,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func didMove(to view: SKView) {
         
         createLives(lives: lives) //puts n of lives in array
+        
+        distanceLabel.frame = CGRect(x: 10, y: 10, width: size.width, height: 20)
+        distanceLabel.text = "Distance: 0"
+        distanceLabel.textColor = .black
+        self.view?.addSubview(distanceLabel)
         
         
         physicsWorld.contactDelegate = self //we are using SKPhysicsContactDelegate
@@ -69,17 +73,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         addChild(cameraNode)
         camera = cameraNode
-        distanceLabel.text = "Distance: 0"
-        distanceLabel.position = CGPoint(x: size.width/2, y: size.height/2)
-        distanceLabel.fontSize = 20
-        distanceLabel.zPosition = 100
         gameOverNode.position = cameraNode.position
         gameOverNode.isHidden = true
         cameraNode.position = CGPoint(x: size.width/2, y: size.height/2)
         cameraNode.addChild(gameOverNode)
-        
-        addChild(distanceLabel)
-        
     }
     
     override func update(_ currentTime: TimeInterval) { // executed every frame
@@ -137,26 +134,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         var i:CGFloat = 0
         for life in hearts {
-            
             life.position.y = (cameraNode.position.y + 250)
             life.position.x = (cameraNode.position.x - 120) + (i*50)
             life.zPosition = 9999
             i = i+1
-            
-
         }
         
-        distanceLabel.position.y = (cameraNode.position.y + 350)
-        distanceLabel.position.x = (cameraNode.position.x - 200)
-       
-        
-        
-        
+        distanceLabel.text = "Distance: \(Int(ceil((player.position.y - size.height/2) * -1)))"
     }
     
     func move(sprite: SKSpriteNode, velocity: CGPoint) {
         let amountToMove = CGPoint(x: velocity.x * CGFloat(dt), y: velocity.y * CGFloat(dt))
-//        print("Amount to move: \(amountToMove)")
         sprite.position = CGPoint(x: sprite.position.x + amountToMove.x, y: sprite.position.y + amountToMove.y)
         
     }
@@ -172,7 +160,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         obstacle.physicsBody = SKPhysicsBody(circleOfRadius: obstacle.size.width/3)
         obstacle.physicsBody?.affectedByGravity = false
         obstacle.physicsBody?.allowsRotation = false
-//        obstacle.physicsBody?.isDynamic = false
         obstacle.physicsBody?.categoryBitMask = 1 //1 represents obstacles
         obstacle.physicsBody?.collisionBitMask = 0 //0 represents player
         
@@ -181,9 +168,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
-        //what happens when you hit an object
-        print("CONTACT!")
-//        hearts.popLast();
+        //print("CONTACT!")
     }
     
     func didEnd(_ contact: SKPhysicsContact) {
@@ -208,6 +193,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.canMove = false
             gameOverNode.zPosition = 1000
             gameOverNode.isHidden = false
+            Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false, block: {
+                (timer: Timer) -> Void in
+                let govc: GameOverViewController = GameOverViewController(distance: Int(ceil((self.player.position.y - self.size.height/2) * -1)))
+                UIApplication.shared.keyWindow?.rootViewController!.present(govc, animated: false, completion: {
+                    () -> Void in
+                })
+            })
         }
     }
     
